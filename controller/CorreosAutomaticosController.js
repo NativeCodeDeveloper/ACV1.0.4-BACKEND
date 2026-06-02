@@ -1,4 +1,5 @@
 import "dotenv/config";
+import { obtenerDatosEmpresaConfig } from "../services/datosEmpresaConfig.js";
 
 export default class CorreosAutomaticosController {
 
@@ -18,10 +19,19 @@ export default class CorreosAutomaticosController {
             }
 
             const apiKey = process.env.BREVO_API_KEY;
-            const NOMBRE_EMPRESA = process.env.NOMBRE_EMPRESA;
+            const correoRemitente = process.env.CORREO_REMITENTE;
+            const { nombreEmpresa, correoEmpresa } = await obtenerDatosEmpresaConfig();
 
             if (!apiKey) {
                 console.error("Falta BREVO_API_KEY en .env");
+                return res.status(500).json({ mensaje: 'sindato' });
+            }
+            if (!correoEmpresa) {
+                console.error("Falta contactoEmail en datos_empresa");
+                return res.status(500).json({ mensaje: 'sindato' });
+            }
+            if (!correoRemitente) {
+                console.error("Falta CORREO_REMITENTE en .env");
                 return res.status(500).json({ mensaje: 'sindato' });
             }
 
@@ -33,8 +43,8 @@ export default class CorreosAutomaticosController {
                 },
                 body: JSON.stringify({
                     sender: {
-                        name: NOMBRE_EMPRESA,
-                        email: "contacto@nativecode.cl",
+                        name: nombreEmpresa,
+                        email: correoRemitente,
                     },
                     to: [
                         {
@@ -43,13 +53,13 @@ export default class CorreosAutomaticosController {
                         },
                     ],
                     replyTo: {
-                        email: "contacto@nativecode.cl",
-                        name: NOMBRE_EMPRESA,
+                        email: correoEmpresa,
+                        name: nombreEmpresa,
                     },
                     subject: asunto,
                     htmlContent: `
                         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-                            <h2 style="color: #0369a1;">${NOMBRE_EMPRESA}</h2>
+                            <h2 style="color: #0369a1;">${nombreEmpresa}</h2>
                             <div style="background-color: #f8fafc; padding: 20px; border-radius: 8px; margin-top: 20px;">
                                 ${mensaje.replace(/\n/g, '<br/>')}
                             </div>
@@ -87,7 +97,7 @@ export default class CorreosAutomaticosController {
     static async enviarFormularioContacto(req, res) {
         try {
             const { nombre, email, mensaje } = req.body;
-            const NOMBRE_EMPRESA = process.env.NOMBRE_EMPRESA;
+            const { nombreEmpresa, correoEmpresa } = await obtenerDatosEmpresaConfig();
             console.log(req.body);
 
             // Validación básica
@@ -96,9 +106,18 @@ export default class CorreosAutomaticosController {
             }
 
             const apiKey = process.env.BREVO_API_KEY;
+            const correoRemitente = process.env.CORREO_REMITENTE;
             if (!apiKey) {
                 console.error("Falta BREVO_API_KEY en .env");
                 return res.status(500).json({ mensaje: 'sindato' });}
+            if (!correoEmpresa) {
+                console.error("Falta contactoEmail en datos_empresa");
+                return res.status(500).json({ mensaje: 'sindato' });
+            }
+            if (!correoRemitente) {
+                console.error("Falta CORREO_REMITENTE en .env");
+                return res.status(500).json({ mensaje: 'sindato' });
+            }
 
             const response = await fetch("https://api.brevo.com/v3/smtp/email", {
                 method: "POST",
@@ -108,13 +127,13 @@ export default class CorreosAutomaticosController {
                 },
                 body: JSON.stringify({
                     sender: {
-                        name: "E-Commerce ProSuite",
-                        email: "contacto@nativecode.cl", // remitente de TU dominio
+                        name: nombreEmpresa,
+                        email: correoRemitente,
                     },
                     to: [
                         {
-                            email: "contacto@nativecode.cl", // donde recibes tú
-                            name: "NativeCode",
+                            email: correoEmpresa,
+                            name: nombreEmpresa,
                         },
                     ],
                     replyTo: {
@@ -124,7 +143,7 @@ export default class CorreosAutomaticosController {
                     subject: `Nuevo mensaje de ${nombre}`,
                     htmlContent: `
 
-            <h2>Nueva consulta de Cliente desde E-Commerce Pro (Formulario de Contacto):</h2>
+            <h2>Nueva consulta de Cliente desde ${nombreEmpresa} (Formulario de Contacto):</h2>
             <p><strong>Nombre:</strong> ${nombre}</p>
             <p><strong>Email:</strong> ${email}</p>
             <p><strong>Mensaje:</strong><br/>${mensaje}</p>
@@ -157,7 +176,7 @@ export default class CorreosAutomaticosController {
         try {
             const { cliente, venta, productos } = req.body;
             console.log("BODY COMPROBANTE:", req.body);
-            const NOMBRE_EMPRESA = process.env.NOMBRE_EMPRESA;
+            const { nombreEmpresa, correoEmpresa } = await obtenerDatosEmpresaConfig();
 
             // Validación básica
             if (!cliente || !venta || !Array.isArray(productos) || productos.length === 0) {
@@ -165,8 +184,17 @@ export default class CorreosAutomaticosController {
             }
 
             const apiKey = process.env.BREVO_API_KEY;
+            const correoRemitente = process.env.CORREO_REMITENTE;
             if (!apiKey) {
                 console.error("Falta BREVO_API_KEY en .env");
+                return res.status(500).json({ message: 'sindato' });
+            }
+            if (!correoEmpresa) {
+                console.error("Falta contactoEmail en datos_empresa");
+                return res.status(500).json({ message: 'sindato' });
+            }
+            if (!correoRemitente) {
+                console.error("Falta CORREO_REMITENTE en .env");
                 return res.status(500).json({ message: 'sindato' });
             }
 
@@ -193,8 +221,8 @@ export default class CorreosAutomaticosController {
                 },
                 body: JSON.stringify({
                     sender: {
-                        name: "E-Commerce ProSuite",
-                        email: "contacto@nativecode.cl", // remitente de TU dominio
+                        name: nombreEmpresa,
+                        email: correoRemitente,
                     },
                     to: [
                         {
@@ -202,18 +230,18 @@ export default class CorreosAutomaticosController {
                             name: cliente.nombre,
                         },
                         {
-                            email: "contacto@nativecode.cl", // copia para ti
-                            name: "NativeCode",
+                            email: correoEmpresa,
+                            name: nombreEmpresa,
                         },
                     ],
                     replyTo: {
-                        email: "contacto@nativecode.cl",
-                        name: "Soporte ProSuite",
+                        email: correoEmpresa,
+                        name: nombreEmpresa,
                     },
                     subject: `Comprobante de compra #${venta.codigo || venta.id || ""}`,
                     htmlContent: `
                     <h2>Gracias por tu compra, ${cliente.nombre}</h2>
-                    <p>Este es el comprobante de tu compra realizada en <strong> ${NOMBRE_EMPRESA} </strong>.</p>
+                    <p>Este es el comprobante de tu compra realizada en <strong> ${nombreEmpresa} </strong>.</p>
 
                     <h3>Datos de la compra</h3>
                     <p><strong>Código de pedido:</strong> ${venta.codigo || "-"}<br/>

@@ -1,5 +1,6 @@
 import twilio from 'twilio';
 import { construirEnlacesReservaToken } from './notificacionReservaToken.js';
+import { obtenerDatosEmpresaConfig } from './datosEmpresaConfig.js';
 
 /**
  * SERVICIO DE NOTIFICACIONES WHATSAPP VÍA TWILIO (TEMPLATE APROBADO)
@@ -14,7 +15,7 @@ import { construirEnlacesReservaToken } from './notificacionReservaToken.js';
  *   - quick_reply: usa payloads en botones de respuesta
  *   - url_buttons: usa botones que abren URL
  *   - text_links: envía los links dentro del cuerpo del template
- * - NOMBRE_EMPRESA        (se usa como nombre de clínica por defecto)
+ * Los datos de nombre, direccion y telefono de la empresa vienen desde datos_empresa.
  */
 
 /**
@@ -76,7 +77,7 @@ function construirPayloadsReserva({ id_reserva }) {
  * @param {Object} params
  * @param {string} params.telefono  - Teléfono del paciente
  * @param {string} params.nombre    - Nombre del paciente
- * @param {string} params.clinica   - Nombre de la clínica (opcional, usa NOMBRE_EMPRESA)
+ * @param {string} params.clinica   - Nombre de la clínica (opcional, usa datos_empresa)
  * @param {string} params.fecha     - Fecha de la cita (ej: "Lunes 28 de Julio 2025")
  * @param {string} params.hora      - Hora de la cita (ej: "10:30")
  * @returns {Promise<boolean>} true si se envió correctamente
@@ -92,24 +93,22 @@ export async function notificacionAgendamiento({ telefono, nombre, apellido, nom
         TWILIO_ACCOUNT_SID,
         TWILIO_AUTH_TOKEN,
         TWILIO_WHATSAPP_FROM,
-        TWILIO_CONTENT_SID,
-        NOMBRE_EMPRESA,
-        DIRECCION_EMPRESA,
-        TELEFONO_EMPRESA
+        TWILIO_CONTENT_SID
     } = process.env;
+    const { nombreEmpresa, direccionEmpresa, telefonoEmpresa } = await obtenerDatosEmpresaConfig();
 
     if (!TWILIO_ACCOUNT_SID || !TWILIO_AUTH_TOKEN) {
         console.warn("[WSP] Credenciales de Twilio no configuradas. Mensaje no enviado.");
         return false;
     }
 
-    if(!DIRECCION_EMPRESA){
-        console.warn(`[DIRECCION_EMPRESA] no ha sido configurado`);
+    if(!direccionEmpresa){
+        console.warn(`[DATOS_EMPRESA] direccion no configurada`);
         return false;
     }
 
-    if (!TELEFONO_EMPRESA) {
-        console.warn(`No ha sido configurado correctamente`);
+    if (!telefonoEmpresa) {
+        console.warn(`[DATOS_EMPRESA] telefono no configurado`);
         return false;
     }
 
@@ -134,7 +133,7 @@ export async function notificacionAgendamiento({ telefono, nombre, apellido, nom
         return false;
     }
 
-    const nombreClinica = clinica || NOMBRE_EMPRESA || "la clínica";
+    const nombreClinica = clinica || nombreEmpresa || "la clínica";
     const fromNumber = TWILIO_WHATSAPP_FROM.startsWith('+')
         ? TWILIO_WHATSAPP_FROM
         : `+${TWILIO_WHATSAPP_FROM}`;
@@ -149,20 +148,20 @@ export async function notificacionAgendamiento({ telefono, nombre, apellido, nom
     const buttonMode = String(process.env.TWILIO_TEMPLATE_BUTTON_MODE || "quick_reply").toLowerCase();
     let contentVariables;
 
-    // Orden alineado con el template:
-    // 1 nombre paciente, 2 clinica, 3 profesional, 4 motivo,
-    // 5 fecha, 6 hora, 7 direccion, 8 telefono,
+    // Orden real del template Twilio aprobado:
+    // 1 nombre paciente, 2 clinica, 3 fecha, 4 hora,
+    // 5 direccion, 6 telefono, 7 profesional, 8 motivo,
     // 9 confirmar, 10 anular.
     if (buttonMode === "url_buttons") {
         contentVariables = {
             1: nombre,
             2: nombreClinica,
-            3: nombreProfesional || "",
-            4: motivo_reserva || "",
-            5: fecha,
-            6: hora,
-            7: DIRECCION_EMPRESA,
-            8: TELEFONO_EMPRESA,
+            3: fecha,
+            4: hora,
+            5: direccionEmpresa,
+            6: telefonoEmpresa,
+            7: nombreProfesional || "",
+            8: motivo_reserva || "",
             9: id_reserva ? String(id_reserva) : "",
             10: id_reserva ? String(id_reserva) : "",
         };
@@ -170,12 +169,12 @@ export async function notificacionAgendamiento({ telefono, nombre, apellido, nom
         contentVariables = {
             1: nombre,
             2: nombreClinica,
-            3: nombreProfesional || "",
-            4: motivo_reserva || "",
-            5: fecha,
-            6: hora,
-            7: DIRECCION_EMPRESA,
-            8: TELEFONO_EMPRESA,
+            3: fecha,
+            4: hora,
+            5: direccionEmpresa,
+            6: telefonoEmpresa,
+            7: nombreProfesional || "",
+            8: motivo_reserva || "",
             9: urlConfirmar || "",
             10: urlCancelar || "",
         };
@@ -183,12 +182,12 @@ export async function notificacionAgendamiento({ telefono, nombre, apellido, nom
         contentVariables = {
             1: nombre,
             2: nombreClinica,
-            3: nombreProfesional || "",
-            4: motivo_reserva || "",
-            5: fecha,
-            6: hora,
-            7: DIRECCION_EMPRESA,
-            8: TELEFONO_EMPRESA,
+            3: fecha,
+            4: hora,
+            5: direccionEmpresa,
+            6: telefonoEmpresa,
+            7: nombreProfesional || "",
+            8: motivo_reserva || "",
             9: payloadConfirmar,
             10: payloadCancelar,
             11: urlConfirmar || "",
@@ -200,8 +199,7 @@ export async function notificacionAgendamiento({ telefono, nombre, apellido, nom
         const client = twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN);
 
         console.log("[WSP] buttonMode:", buttonMode);
-        console.log("[WSP] variable7:", contentVariables[7]);
-        console.log("[WSP] variable8:", contentVariables[8]);
+        console.log("[WSP] variables:", contentVariables);
 
         await client.messages.create({
             from: `whatsapp:${fromNumber}`,
@@ -300,23 +298,21 @@ export async function enviarRecordatorio_1hora({ telefono, nombre, clinica, fech
         TWILIO_AUTH_TOKEN,
         TWILIO_WHATSAPP_FROM,
         TWILIO_CONTENT_SID_RECORDATORIO,
-        NOMBRE_EMPRESA,
-        TELEFONO_EMPRESA,
-        DIRECCION_EMPRESA,
     } = process.env;
+    const { nombreEmpresa, direccionEmpresa, telefonoEmpresa } = await obtenerDatosEmpresaConfig();
 
     if (!TWILIO_ACCOUNT_SID || !TWILIO_AUTH_TOKEN) {
         console.warn("[WSP] Credenciales de Twilio no configuradas. Mensaje no enviado.");
         return false;
     }
 
-    if (!TELEFONO_EMPRESA) {
-        console.warn(`[TELEFONO_EMPRESA], telefono empresa no configurado. Mensaje no enviado.`);
+    if (!telefonoEmpresa) {
+        console.warn(`[DATOS_EMPRESA], telefono empresa no configurado. Mensaje no enviado.`);
         return false;
     }
 
-    if (!DIRECCION_EMPRESA) {
-        console.warn(`[DIRECCION_EMPRESA], direccion no configuradas. Mensaje no enviado.`);
+    if (!direccionEmpresa) {
+        console.warn(`[DATOS_EMPRESA], direccion no configurada. Mensaje no enviado.`);
         return false;
     }
 
@@ -341,7 +337,7 @@ export async function enviarRecordatorio_1hora({ telefono, nombre, clinica, fech
         return false;
     }
 
-    const nombreClinica = clinica || NOMBRE_EMPRESA || "la clínica";
+    const nombreClinica = clinica || nombreEmpresa || "la clínica";
     const fromNumber = TWILIO_WHATSAPP_FROM.startsWith('+')
         ? TWILIO_WHATSAPP_FROM
         : `+${TWILIO_WHATSAPP_FROM}`;
@@ -358,8 +354,8 @@ export async function enviarRecordatorio_1hora({ telefono, nombre, clinica, fech
                 2: nombreClinica,
                 3: fecha,
                 4: hora,
-                5: DIRECCION_EMPRESA,
-                6: TELEFONO_EMPRESA
+                5: direccionEmpresa,
+                6: telefonoEmpresa
             })
         });
 

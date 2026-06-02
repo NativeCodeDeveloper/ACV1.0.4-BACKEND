@@ -2,6 +2,7 @@ import NotificacionAgendamiento from "../services/notificacionAgendamiento.js";
 import ReservaPacientes from "../model/ReservaPacientes.js";
 import { enviarMensajeTextoWhatsApp } from "../services/notificacionWhatsApp.js";
 import { resolverDatosReservaDesdeRequest } from "../services/notificacionReservaToken.js";
+import { obtenerDatosEmpresaConfig } from "../services/datosEmpresaConfig.js";
 
 function parsearPayloadRespuestaWhatsApp(payload = "") {
   const valor = String(payload || "").trim();
@@ -120,7 +121,8 @@ export default class NotificacionAgendamientoController {
     try {
       const datosReserva = await completarDatosReservaDesdeId(resolverDatosReservaDesdeRequest(req));
 
-      const empresa = process.env.NOMBRE_EMPRESA || "Clinica";
+      const { nombreEmpresa } = await obtenerDatosEmpresaConfig();
+      const empresa = nombreEmpresa || "Clinica";
       const nombreSistema = "AgendaClinica Healthcare Information System";
 
       if (!datosReserva) {
@@ -256,7 +258,8 @@ export default class NotificacionAgendamientoController {
     try {
       const datosReserva = await completarDatosReservaDesdeId(resolverDatosReservaDesdeRequest(req));
 
-      const empresa = process.env.NOMBRE_EMPRESA || "Clinica";
+      const { nombreEmpresa } = await obtenerDatosEmpresaConfig();
+      const empresa = nombreEmpresa || "Clinica";
       const nombreSistema = "AgendaClinica Healthcare Information System";
 
       if (!datosReserva) {
@@ -432,7 +435,8 @@ export default class NotificacionAgendamientoController {
     try {
       const datosReserva = await completarDatosReservaDesdeId(resolverDatosReservaDesdeRequest(req));
 
-      const empresa = process.env.NOMBRE_EMPRESA || "Clinica";
+      const { nombreEmpresa } = await obtenerDatosEmpresaConfig();
+      const empresa = nombreEmpresa || "Clinica";
       const nombreSistema = "AgendaClinica Healthcare Information System";
 
       if (!datosReserva) {
@@ -579,7 +583,8 @@ export default class NotificacionAgendamientoController {
     try {
       const datosReserva = await completarDatosReservaDesdeId(resolverDatosReservaDesdeRequest(req));
 
-      const empresa = process.env.NOMBRE_EMPRESA || "Clinica";
+      const { nombreEmpresa } = await obtenerDatosEmpresaConfig();
+      const empresa = nombreEmpresa || "Clinica";
       const nombreSistema = "AgendaClinica Healthcare Information System";
 
       if (!datosReserva) {

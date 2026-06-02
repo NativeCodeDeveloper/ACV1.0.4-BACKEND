@@ -1,4 +1,5 @@
 import { construirEnlacesReservaToken } from "./notificacionReservaToken.js";
+import { obtenerDatosEmpresaConfig } from "./datosEmpresaConfig.js";
 
 function formatearMontoCorreo(monto) {
     const numero = Number(monto ?? 0);
@@ -238,7 +239,8 @@ export default class NotificacionAgendamiento {
                                                       estadoReserva,
                                                       id_reserva
                                                   }) {
-        const { BREVO_API_KEY, NOMBRE_EMPRESA } = process.env;
+        const { BREVO_API_KEY, CORREO_REMITENTE } = process.env;
+        const { correoEmpresa, nombreEmpresa } = await obtenerDatosEmpresaConfig();
 
         if (!BREVO_API_KEY) {
             console.warn("[MAIL] BREVO_API_KEY no configurada. Correo no enviado.");
@@ -256,8 +258,8 @@ export default class NotificacionAgendamiento {
             return;
         }
 
-        const fromEmail = process.env.CORREO_REMITENTE || "desarrollo.native.code@gmail.com";
-        const fromName = NOMBRE_EMPRESA || "Sistema de Agendamiento";
+        const fromEmail = CORREO_REMITENTE;
+        const fromName = nombreEmpresa || "Sistema de Agendamiento";
 
         if (!fromEmail) {
             console.warn("[MAIL] CORREO_REMITENTE no configurado. Correo no enviado.");
@@ -274,7 +276,7 @@ export default class NotificacionAgendamiento {
             fechaInicio,
             horaInicio
         });
-        const empresa = process.env.NOMBRE_EMPRESA || "Sistema de Agendamiento";
+        const empresa = nombreEmpresa || "Sistema de Agendamiento";
 
         const text =
             `Tu cita en ${empresa} ha sido actualizada.\n\n` +
@@ -320,6 +322,7 @@ export default class NotificacionAgendamiento {
         const payload = {
             sender: { name: fromName, email: fromEmail },
             to: [{ email: to }],
+            replyTo: correoEmpresa ? { email: correoEmpresa, name: fromName } : undefined,
             subject,
             textContent: text,
             htmlContent: html
@@ -372,7 +375,8 @@ export default class NotificacionAgendamiento {
                                                      estadoReserva,
                                                      id_reserva
                                                  }) {
-        const { BREVO_API_KEY, CORREO_RECEPTOR, NOMBRE_EMPRESA, API_URL } = process.env;
+        const { BREVO_API_KEY, API_URL, CORREO_REMITENTE } = process.env;
+        const { correoEmpresa, nombreEmpresa } = await obtenerDatosEmpresaConfig();
 
         // No romper el flujo principal si falta configuración
         if (!BREVO_API_KEY) {
@@ -392,8 +396,8 @@ export default class NotificacionAgendamiento {
         }
 
         // En Brevo, el 'from' debe ser un remitente verificado.
-        const fromEmail = process.env.CORREO_REMITENTE || "desarrollo.native.code@gmail.com";
-        const fromName = NOMBRE_EMPRESA || "Sistema de Agendamiento";
+        const fromEmail = CORREO_REMITENTE;
+        const fromName = nombreEmpresa || "Sistema de Agendamiento";
 
         if (!fromEmail) {
             console.warn("[MAIL] CORREO_REMITENTE no configurado. Correo no enviado.");
@@ -411,7 +415,7 @@ export default class NotificacionAgendamiento {
             fechaInicio,
             horaInicio
         });
-        const empresa = process.env.NOMBRE_EMPRESA || "Sistema de Agendamiento";
+        const empresa = nombreEmpresa || "Sistema de Agendamiento";
 
         const text =
             `Tu cita en ${empresa} ha sido registrada.\n\n` +
@@ -458,6 +462,7 @@ export default class NotificacionAgendamiento {
         const payload = {
             sender: { name: fromName, email: fromEmail },
             to: [{ email: to }],
+            replyTo: correoEmpresa ? { email: correoEmpresa, name: fromName } : undefined,
             subject,
             textContent: text,
             htmlContent: html
@@ -494,7 +499,7 @@ export default class NotificacionAgendamiento {
     // BLOQUE 3: CORREO INTERNO AL EQUIPO / NEGOCIO
     // =========================================================
     // Este correo NO va al paciente.
-    // Va al correo interno configurado en CORREO_RECEPTOR para
+    // Va al contactoEmail configurado en datos_empresa para
     // avisar al equipo que una cita fue agendada, actualizada,
     // confirmada o cancelada.
     static async enviarCorreoConfirmacionEquipo({
@@ -508,22 +513,27 @@ export default class NotificacionAgendamiento {
                                                     accion, // "CONFIRMADA", "CANCELADA" o "AGENDADA"
                                                     id_reserva
                                                 }) {
-        const { BREVO_API_KEY, NOMBRE_EMPRESA } = process.env;
+        const { BREVO_API_KEY, CORREO_REMITENTE } = process.env;
+        const { correoEmpresa, nombreEmpresa } = await obtenerDatosEmpresaConfig();
 
         if (!BREVO_API_KEY) {
             console.warn("[MAIL EQUIPO] BREVO_API_KEY no configurada. Correo no enviado.");
             return;
         }
 
-        const fromEmail = process.env.CORREO_REMITENTE || "desarrollo.native.code@gmail.com";
-        const fromName = NOMBRE_EMPRESA || "Sistema de Agendamiento";
+        const fromEmail = CORREO_REMITENTE;
+        const fromName = nombreEmpresa || "Sistema de Agendamiento";
 
         if (!fromEmail) {
             console.warn("[MAIL EQUIPO] CORREO_REMITENTE no configurado. Correo no enviado.");
             return;
         }
 
-        const destinatario = process.env.CORREO_RECEPTOR || "siluetachicestudio@gmail.com";
+        const destinatario = correoEmpresa;
+        if (!destinatario) {
+            console.warn("[MAIL EQUIPO] contactoEmail no configurado en datos_empresa. Correo no enviado.");
+            return;
+        }
         const logoUrl = construirUrlLogoCorreo(process.env.API_URL);
 
         let subject, text, colorAccion, iconoAccion, textoAccion, detalleAccion;

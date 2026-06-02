@@ -1,13 +1,9 @@
 import { Router } from 'express';
 import {createOrder, recibirPago} from "../controller/MercadoPagoController.js";
+import { obtenerDatosEmpresaConfig } from "../services/datosEmpresaConfig.js";
 
 
 const router = Router();
-
-
-const FRONTEND = process.env.FRONT_URL;
-
-
 
 
 // RUTA PARA RECONOCER LA RUTA DE PAGAR CON MERCADO PAGO DESDE EL BACKEND
@@ -19,16 +15,22 @@ router.post('/create-order', createOrder);
 // WEBHOOK DE ESTADO PAGADO
 router.post('/notificacionPago', recibirPago);
 
-router.get('/success', (req, res) => {
-    return res.redirect(`${FRONTEND}/pagoAprobado`);
+async function redirigirPago(res, ruta) {
+    const { frontUrl } = await obtenerDatosEmpresaConfig();
+    const baseUrl = String(frontUrl || "/").replace(/\/$/, "");
+    return res.redirect(`${baseUrl}${ruta}`);
+}
+
+router.get('/success', async (req, res) => {
+    return redirigirPago(res, "/pagoAprobado");
 });
 
-router.get('/failure', (req, res) => {
-return res.redirect(`${FRONTEND}/pagoRechazado`);
+router.get('/failure', async (req, res) => {
+    return redirigirPago(res, "/pagoRechazado");
 });
 
-router.get('/pending', (req, res) => {
- return res.redirect(`${FRONTEND}/pagoPendiente`);
+router.get('/pending', async (req, res) => {
+    return redirigirPago(res, "/pagoPendiente");
 });
 
 

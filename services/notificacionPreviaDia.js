@@ -1,5 +1,6 @@
 import DataBase from '../config/Database.js';
 import { enviarRecordatorio_1hora } from './notificacionWhatsApp.js';
+import { obtenerDatosEmpresaConfig } from './datosEmpresaConfig.js';
 
 /**
  * SISTEMA DE RECORDATORIOS AUTOMÁTICOS DE CITAS
@@ -16,13 +17,12 @@ import { enviarRecordatorio_1hora } from './notificacionWhatsApp.js';
  * Debe ejecutarse como cron job cada 5-10 minutos
  */
 
-const DIRECCION_CLINICA = process.env.DIRECCION_EMPRESA;
-
 /**
  * Envía el correo de recordatorio usando Brevo API
  */
 async function enviarCorreoRecordatorio({ email, nombrePaciente, apellidoPaciente, fecha, hora, tipoRecordatorio }) {
-    const { BREVO_API_KEY, CORREO_RECEPTOR, NOMBRE_EMPRESA } = process.env;
+    const { BREVO_API_KEY, CORREO_REMITENTE } = process.env;
+    const { correoEmpresa, nombreEmpresa, direccionEmpresa } = await obtenerDatosEmpresaConfig();
 
     if (!BREVO_API_KEY) {
         console.warn("[RECORDATORIO] BREVO_API_KEY no configurada. Correo no enviado.");
@@ -34,11 +34,11 @@ async function enviarCorreoRecordatorio({ email, nombrePaciente, apellidoPacient
         return false;
     }
 
-    const fromEmail = CORREO_RECEPTOR;
-    const fromName = NOMBRE_EMPRESA || "Clinica";
+    const fromEmail = CORREO_REMITENTE;
+    const fromName = nombreEmpresa || "Clinica";
 
     if (!fromEmail) {
-        console.warn("[RECORDATORIO] CORREO_RECEPTOR no configurado. Correo no enviado.");
+        console.warn("[RECORDATORIO] CORREO_REMITENTE no configurado. Correo no enviado.");
         return false;
     }
 
@@ -91,7 +91,7 @@ async function enviarCorreoRecordatorio({ email, nombrePaciente, apellidoPacient
                 <span style="color: #6b7280; margin-left: 10px;">Lugar:</span>
               </td>
               <td style="padding: 10px 0; text-align: right;">
-                <b style="color: #111827; font-size: 13px;">${DIRECCION_CLINICA}</b>
+                <b style="color: #111827; font-size: 13px;">${direccionEmpresa}</b>
               </td>
             </tr>
           </table>
@@ -138,7 +138,7 @@ Junto con saludarle, queremos recordarle que mantiene una cita agendada según e
 
 📅 Fecha: ${fecha}
 ⏰ Hora: ${hora}
-📍 Lugar: ${DIRECCION_CLINICA}
+📍 Lugar: ${direccionEmpresa}
 
 Le solicitamos, por favor, no olvidar asistir a su cita en el horario indicado. En caso de no poder concurrir, le agradeceremos avisar con anticipación para poder reprogramarla y así liberar el cupo para otro paciente.
 
@@ -151,6 +151,7 @@ ${fromName}
     const payload = {
         sender: { name: fromName, email: fromEmail },
         to: [{ email }],
+        replyTo: correoEmpresa ? { email: correoEmpresa, name: fromName } : undefined,
         subject,
         textContent: text,
         htmlContent: html
