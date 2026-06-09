@@ -1,5 +1,5 @@
 ### GET // FUNCION PARA SELECCIONAR TODOS LOS DATOS DE EMPRESA ACTIVOS
-GET http://localhost:3010/datosempresa/seleccionartodos
+GET https://3069.nativecode.cl/datosempresa/seleccionartodos
 Content-Type: application/json
 
 
