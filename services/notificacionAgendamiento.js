@@ -1,5 +1,6 @@
 import { construirEnlacesReservaToken } from "./notificacionReservaToken.js";
 import { obtenerDatosEmpresaConfig } from "./datosEmpresaConfig.js";
+import ReservaPacientes from "../model/ReservaPacientes.js";
 
 function formatearMontoCorreo(monto) {
     const numero = Number(monto ?? 0);
@@ -10,6 +11,79 @@ function formatearMontoCorreo(monto) {
 function normalizarTextoCorreo(valor, fallback = "-") {
     const texto = String(valor ?? "").trim();
     return texto || fallback;
+}
+
+function formatearFechaCorreo(fecha) {
+    const valor = String(fecha ?? "").trim();
+    if (!valor) return "-";
+
+    const matchIso = valor.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (matchIso) {
+        return `${matchIso[3]}/${matchIso[2]}/${matchIso[1]}`;
+    }
+
+    const fechaDate = fecha instanceof Date ? fecha : new Date(valor);
+    if (Number.isNaN(fechaDate.getTime())) return valor;
+
+    const partes = new Intl.DateTimeFormat("es-CL", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        timeZone: "America/Santiago"
+    }).formatToParts(fechaDate);
+    const obtenerParte = (tipo) => partes.find((parte) => parte.type === tipo)?.value;
+    const dia = obtenerParte("day");
+    const mes = obtenerParte("month");
+    const year = obtenerParte("year");
+
+    return dia && mes && year ? `${dia}/${mes}/${year}` : valor;
+}
+
+function formatearHoraCorreo(hora) {
+    const valor = String(hora ?? "").trim();
+    if (!valor) return "-";
+
+    const matchHora = valor.match(/^(\d{1,2}):(\d{2})/);
+    if (!matchHora) return valor;
+    return `${matchHora[1].padStart(2, "0")}:${matchHora[2]}`;
+}
+
+function campoCorreoAusente(valor) {
+    return valor === undefined
+        || valor === null
+        || (typeof valor === "string" && !valor.trim());
+}
+
+async function completarDatosCorreoEquipo(datosCorreo) {
+    const camposReserva = [
+        "nombreProfesional",
+        "nombrePaciente",
+        "apellidoPaciente",
+        "fechaInicio",
+        "horaInicio",
+        "motivo_reserva",
+        "monto_reserva"
+    ];
+    const requiereCompletar = camposReserva.some((campo) => campoCorreoAusente(datosCorreo[campo]));
+
+    if (!requiereCompletar || !datosCorreo.id_reserva) {
+        return datosCorreo;
+    }
+
+    try {
+        const reservaPacienteClass = new ReservaPacientes();
+        const dataReserva = await reservaPacienteClass.seleccionarFichasReservadasEspecifica(datosCorreo.id_reserva);
+        const reserva = Array.isArray(dataReserva) && dataReserva.length > 0 ? dataReserva[0] : null;
+        if (!reserva) return datosCorreo;
+
+        return camposReserva.reduce((datosCompletos, campo) => ({
+            ...datosCompletos,
+            [campo]: campoCorreoAusente(datosCompletos[campo]) ? reserva[campo] : datosCompletos[campo]
+        }), { ...datosCorreo });
+    } catch (error) {
+        console.error("[MAIL EQUIPO] No se pudieron completar los datos de la reserva:", error.message);
+        return datosCorreo;
+    }
 }
 
 function construirUrlLogoCorreo(apiUrl) {
@@ -160,16 +234,12 @@ function construirHtmlCorreoEquipo({
     monto_reserva,
     id_reserva,
     detalleAccion,
-    fromName,
-    logoUrl
+    fromName
 }) {
     return `
       <div style="margin: 0; padding: 28px 16px; background: #eef3f6; font-family: Helvetica, Arial, sans-serif; color: #17324d;">
         <div style="max-width: 620px; margin: 0 auto; background: #ffffff; border: 1px solid #d9e5ec; border-radius: 26px; overflow: hidden; box-shadow: 0 24px 50px rgba(15, 39, 64, 0.12);">
           <div style="padding: 20px 24px; background: linear-gradient(135deg, #0f2740 0%, ${accent} 100%); color: #ffffff;">
-            <div style="margin-bottom: 12px;">
-              <img src="${logoUrl}" alt="${fromName}" style="display: block; height: 38px; width: auto; max-width: 170px;" />
-            </div>
             <p style="margin: 0 0 8px; font-size: 10px; font-weight: 800; letter-spacing: 0.18em; text-transform: uppercase; color: rgba(255,255,255,0.76);">
               Notificacion Interna
             </p>
@@ -191,8 +261,8 @@ function construirHtmlCorreoEquipo({
 
             <table style="width: 100%; border-collapse: collapse; margin-top: 22px;">
               <tr><td style="padding: 12px 0; border-bottom: 1px solid #dbe6ed; color: #6a8092; width: 40%;">ID Reserva</td><td style="padding: 12px 0; border-bottom: 1px solid #dbe6ed; font-weight: 700;">${id_reserva}</td></tr>
-              <tr><td style="padding: 12px 0; border-bottom: 1px solid #dbe6ed; color: #6a8092;">Fecha</td><td style="padding: 12px 0; border-bottom: 1px solid #dbe6ed; font-weight: 700;">${fechaInicio}</td></tr>
-              <tr><td style="padding: 12px 0; border-bottom: 1px solid #dbe6ed; color: #6a8092;">Hora</td><td style="padding: 12px 0; border-bottom: 1px solid #dbe6ed; font-weight: 700;">${horaInicio}</td></tr>
+              <tr><td style="padding: 12px 0; border-bottom: 1px solid #dbe6ed; color: #6a8092;">Fecha</td><td style="padding: 12px 0; border-bottom: 1px solid #dbe6ed; font-weight: 700;">${formatearFechaCorreo(fechaInicio)}</td></tr>
+              <tr><td style="padding: 12px 0; border-bottom: 1px solid #dbe6ed; color: #6a8092;">Hora</td><td style="padding: 12px 0; border-bottom: 1px solid #dbe6ed; font-weight: 700;">${formatearHoraCorreo(horaInicio)}</td></tr>
               <tr><td style="padding: 12px 0; border-bottom: 1px solid #dbe6ed; color: #6a8092;">Motivo</td><td style="padding: 12px 0; border-bottom: 1px solid #dbe6ed; font-weight: 700;">${normalizarTextoCorreo(motivo_reserva)}</td></tr>
               <tr><td style="padding: 12px 0; border-bottom: 1px solid #dbe6ed; color: #6a8092;">Monto</td><td style="padding: 12px 0; border-bottom: 1px solid #dbe6ed; font-weight: 700;">$${formatearMontoCorreo(monto_reserva)}</td></tr>
               <tr><td style="padding: 12px 0; color: #6a8092; vertical-align: top;">Accion</td><td style="padding: 12px 0; font-weight: 600; font-size: 13px; line-height: 1.55; color: #486274;">${detalleAccion}</td></tr>
@@ -502,17 +572,18 @@ export default class NotificacionAgendamiento {
     // Va al contactoEmail configurado en datos_empresa para
     // avisar al equipo que una cita fue agendada, actualizada,
     // confirmada o cancelada.
-    static async enviarCorreoConfirmacionEquipo({
-                                                    nombreProfesional,
-                                                    nombrePaciente,
-                                                    apellidoPaciente,
-                                                    fechaInicio,
-                                                    horaInicio,
-                                                    monto_reserva,
-                                                    motivo_reserva,
-                                                    accion, // "CONFIRMADA", "CANCELADA" o "AGENDADA"
-                                                    id_reserva
-                                                }) {
+    static async enviarCorreoConfirmacionEquipo(datosCorreo) {
+        const {
+            nombreProfesional,
+            nombrePaciente,
+            apellidoPaciente,
+            fechaInicio,
+            horaInicio,
+            monto_reserva,
+            motivo_reserva,
+            accion, // "CONFIRMADA", "CANCELADA" o "AGENDADA"
+            id_reserva
+        } = await completarDatosCorreoEquipo(datosCorreo);
         const { BREVO_API_KEY, CORREO_REMITENTE } = process.env;
         const { correoEmpresa, nombreEmpresa } = await obtenerDatosEmpresaConfig();
 
@@ -534,9 +605,12 @@ export default class NotificacionAgendamiento {
             console.warn("[MAIL EQUIPO] contactoEmail no configurado en datos_empresa. Correo no enviado.");
             return;
         }
-        const logoUrl = construirUrlLogoCorreo(process.env.API_URL);
-
         let subject, text, colorAccion, iconoAccion, textoAccion, detalleAccion;
+        const fechaCorreo = formatearFechaCorreo(fechaInicio);
+        const horaCorreo = formatearHoraCorreo(horaInicio);
+        const profesionalCorreo = normalizarTextoCorreo(nombreProfesional);
+        const motivoCorreo = normalizarTextoCorreo(motivo_reserva);
+        const montoCorreo = formatearMontoCorreo(monto_reserva);
 
         switch (accion) {
             case "CONFIRMADA":
@@ -547,11 +621,11 @@ export default class NotificacionAgendamiento {
                 detalleAccion = "El paciente confirmó su cita desde el enlace del correo.";
                 text = `El paciente ${nombrePaciente} ${apellidoPaciente} ha CONFIRMADO su cita.\n\n` +
                     `• ID Reserva: ${id_reserva}\n` +
-                    `• Fecha: ${fechaInicio}\n` +
-                    `• Hora: ${horaInicio}\n` +
-                    `• Profesional: ${nombreProfesional}\n` +
-                    `• Motivo: ${motivo_reserva}\n` +
-                    `• Monto: $${monto_reserva}\n\n` +
+                    `• Fecha: ${fechaCorreo}\n` +
+                    `• Hora: ${horaCorreo}\n` +
+                    `• Profesional: ${profesionalCorreo}\n` +
+                    `• Motivo: ${motivoCorreo}\n` +
+                    `• Monto: $${montoCorreo}\n\n` +
                     `${detalleAccion}`;
                 break;
 
@@ -563,11 +637,11 @@ export default class NotificacionAgendamiento {
                 detalleAccion = "La reserva fue creada manualmente desde la agenda clínica.";
                 text = `Se ha creado una nueva reserva desde la agenda clínica para ${nombrePaciente} ${apellidoPaciente}.\n\n` +
                     `• ID Reserva: ${id_reserva}\n` +
-                    `• Fecha: ${fechaInicio}\n` +
-                    `• Hora: ${horaInicio}\n` +
-                    `• Profesional: ${nombreProfesional}\n` +
-                    `• Motivo: ${motivo_reserva}\n` +
-                    `• Monto: $${monto_reserva}\n\n` +
+                    `• Fecha: ${fechaCorreo}\n` +
+                    `• Hora: ${horaCorreo}\n` +
+                    `• Profesional: ${profesionalCorreo}\n` +
+                    `• Motivo: ${motivoCorreo}\n` +
+                    `• Monto: $${montoCorreo}\n\n` +
                     `${detalleAccion}`;
                 break;
 
@@ -579,11 +653,11 @@ export default class NotificacionAgendamiento {
                 detalleAccion = "La reserva fue actualizada desde la agenda clínica.";
                 text = `Se actualizó una reserva para ${nombrePaciente} ${apellidoPaciente}.\n\n` +
                     `• ID Reserva: ${id_reserva}\n` +
-                    `• Fecha: ${fechaInicio}\n` +
-                    `• Hora: ${horaInicio}\n` +
-                    `• Profesional: ${nombreProfesional}\n` +
-                    `• Motivo: ${motivo_reserva}\n` +
-                    `• Monto: $${monto_reserva}\n\n` +
+                    `• Fecha: ${fechaCorreo}\n` +
+                    `• Hora: ${horaCorreo}\n` +
+                    `• Profesional: ${profesionalCorreo}\n` +
+                    `• Motivo: ${motivoCorreo}\n` +
+                    `• Monto: $${montoCorreo}\n\n` +
                     `${detalleAccion}`;
                 break;
 
@@ -596,11 +670,11 @@ export default class NotificacionAgendamiento {
                 detalleAccion = "El paciente canceló su cita desde el enlace del correo.";
                 text = `El paciente ${nombrePaciente} ${apellidoPaciente} ha CANCELADO su cita.\n\n` +
                     `• ID Reserva: ${id_reserva}\n` +
-                    `• Fecha: ${fechaInicio}\n` +
-                    `• Hora: ${horaInicio}\n` +
-                    `• Profesional: ${nombreProfesional}\n` +
-                    `• Motivo: ${motivo_reserva}\n` +
-                    `• Monto: $${monto_reserva}\n\n` +
+                    `• Fecha: ${fechaCorreo}\n` +
+                    `• Hora: ${horaCorreo}\n` +
+                    `• Profesional: ${profesionalCorreo}\n` +
+                    `• Motivo: ${motivoCorreo}\n` +
+                    `• Monto: $${montoCorreo}\n\n` +
                     `${detalleAccion}`;
                 break;
         }
@@ -618,8 +692,7 @@ export default class NotificacionAgendamiento {
             monto_reserva,
             id_reserva,
             detalleAccion,
-            fromName,
-            logoUrl
+            fromName
         });
 
         const payload = {

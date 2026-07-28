@@ -92,21 +92,27 @@ function normalizarFechaInput(fecha) {
 
 async function completarDatosReservaDesdeId(datosReserva) {
   if (!datosReserva?.id_reserva) return null;
-  if (datosReserva.nombrePaciente && datosReserva.apellidoPaciente && datosReserva.fechaInicio && datosReserva.horaInicio) {
-    return datosReserva;
-  }
 
   const reservaPacienteClass = new ReservaPacientes();
   const dataReserva = await reservaPacienteClass.seleccionarFichasReservadasEspecifica(datosReserva.id_reserva);
   const reserva = Array.isArray(dataReserva) && dataReserva.length > 0 ? dataReserva[0] : null;
-  if (!reserva) return null;
+  if (!reserva) {
+    const tieneDatosBasicos = datosReserva.nombrePaciente
+      && datosReserva.apellidoPaciente
+      && datosReserva.fechaInicio
+      && datosReserva.horaInicio;
+    return tieneDatosBasicos ? datosReserva : null;
+  }
 
   return {
     ...datosReserva,
     nombrePaciente: reserva.nombrePaciente,
     apellidoPaciente: reserva.apellidoPaciente,
     fechaInicio: reserva.fechaInicio,
-    horaInicio: reserva.horaInicio
+    horaInicio: reserva.horaInicio,
+    nombreProfesional: reserva.nombreProfesional,
+    motivo_reserva: reserva.motivo_reserva,
+    monto_reserva: reserva.monto_reserva
   };
 }
 
@@ -274,7 +280,10 @@ export default class NotificacionAgendamientoController {
         nombrePaciente,
         apellidoPaciente,
         fechaInicio,
-        horaInicio
+        horaInicio,
+        nombreProfesional,
+        motivo_reserva,
+        monto_reserva
       } = datosReserva;
       const fechaFormateada = formatearFechaCorta(fechaInicio);
       const horaFormateada = formatearHoraCorta(horaInicio);
@@ -295,6 +304,9 @@ export default class NotificacionAgendamientoController {
               apellidoPaciente,
               fechaInicio,
               horaInicio,
+              nombreProfesional,
+              motivo_reserva,
+              monto_reserva,
               accion: "CONFIRMADA",
               id_reserva
           });
@@ -599,7 +611,10 @@ export default class NotificacionAgendamientoController {
         nombrePaciente,
         apellidoPaciente,
         fechaInicio,
-        horaInicio
+        horaInicio,
+        nombreProfesional,
+        motivo_reserva,
+        monto_reserva
       } = datosReserva;
       const fechaFormateada = formatearFechaCorta(fechaInicio);
       const horaFormateada = formatearHoraCorta(horaInicio);
@@ -619,6 +634,9 @@ export default class NotificacionAgendamientoController {
             apellidoPaciente,
             fechaInicio,
             horaInicio,
+            nombreProfesional,
+            motivo_reserva,
+            monto_reserva,
             accion: "CANCELADA",
             id_reserva,
           });
@@ -801,6 +819,9 @@ export default class NotificacionAgendamientoController {
           apellidoPaciente: reserva.apellidoPaciente,
           fechaInicio: reserva.fechaInicio,
           horaInicio: reserva.horaInicio,
+          nombreProfesional: reserva.nombreProfesional,
+          motivo_reserva: reserva.motivo_reserva,
+          monto_reserva: reserva.monto_reserva,
           accion: accionEquipo,
           id_reserva
         });
