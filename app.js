@@ -37,6 +37,7 @@ import examenesRoutes from "./view/examenesClinicosRoutes.js";
 import recetasPacientesRoutes from "./view/recetasPacientesRoutes.js";
 import datosEmpresaRoutes from "./view/datosEmpresaRoutes.js";
 import archivoPacienteRoutes from "./view/archivoPacienteRoutes.js";
+import persistence from "./view/mercadoPagoPersistenceRoutes.js"
 
 
 
@@ -90,6 +91,7 @@ app.use("/examenes", examenesRoutes);
 app.use("/recetas", recetasPacientesRoutes);
 app.use("/datosempresa", datosEmpresaRoutes);
 app.use("/archivoPaciente", archivoPacienteRoutes);
+app.use("/persistence", persistence);
 
 // Ruta para ejecutar recordatorios manualmente (protegido con TEST_API_KEY)
 app.get('/recordatorios/ejecutar', async (req, res) => {

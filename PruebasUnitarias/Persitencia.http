@@ -1,0 +1,65 @@
+### Ajustado: pruebas HTTP para la persistencia de Mercado Pago.
+### Usa siempre credenciales ficticias y reemplaza el ID de ejemplo por uno existente.
+
+
+### Seleccionar todas las configuraciones de persistencia
+GET http://localhost:3010/persistence/obtenerPersistencia
+
+
+### Insertar una configuración de persistencia
+POST http://localhost:3010/persistence/insertarPersistencia
+Content-Type: application/json
+
+{
+  "nombre_cliente": "Cliente de prueba Mercado Pago",
+  "access_token": "ACCESS_TOKEN_FICTICIO_PARA_PRUEBAS"
+}
+
+
+### Actualizar una configuración de persistencia
+POST http://localhost:3010/persistence/actualizar
+Content-Type: application/json
+
+{
+  "nombre_cliente": "Cliente de prueba actualizado",
+  "access_token": "ACCESS_TOKEN_FICTICIO_ACTUALIZADO",
+  "id_mercadoPago_persistence": 1
+}
+
+
+### Actualizar el estado de la pasarela
+POST http://localhost:3010/persistence/actualizarEstado
+Content-Type: application/json
+
+{
+  "estado_pasarela": 1,
+  "id_mercadoPago_persistence": 1
+}
+
+
+### Validar inserción sin access token
+POST http://localhost:3010/persistence/insertarPersistencia
+Content-Type: application/json
+
+{
+  "nombre_cliente": "Cliente sin access token"
+}
+
+
+### Validar actualización sin identificador
+POST http://localhost:3010/persistence/actualizar
+Content-Type: application/json
+
+{
+  "nombre_cliente": "Cliente sin identificador",
+  "access_token": "ACCESS_TOKEN_FICTICIO_PARA_PRUEBAS"
+}
+
+
+### Validar actualización de estado sin identificador
+POST http://localhost:3010/persistence/actualizarEstado
+Content-Type: application/json
+
+{
+  "estado_pasarela": 1
+}

@@ -1,10 +1,9 @@
 import dotenv from 'dotenv';
-import mercadopago, * as mpNamed from 'mercadopago';
-import PedidoCompras from "../model/PedidoCompras.js";
 import ReservaPacientes from "../model/ReservaPacientes.js";
 import Pacientes from "../model/Pacientes.js";
 import NotificacionAgendamiento from "../services/notificacionAgendamiento.js";
 import { notificacionAgendamiento } from "../services/notificacionWhatsApp.js";
+import * as mpNamed from "mercadopago";
 
 dotenv.config();
 
@@ -33,12 +32,15 @@ export const createOrder = async (req, res) => {
             id_profesional
         } = req.body;
 
+        console.log("Iniciando Mercado pago: Body");
+        console.log(req.body);
+
         if (!nombrePaciente || !apellidoPaciente || !rut || !telefono || !email || !fechaInicio || !horaInicio || !fechaFinalizacion || !horaFinalizacion || !id_profesional) {
-            return res.status(400).json({ error: 'Faltan datos obligatorios para la reserva' });
+            return res.status(400).json({ message: 'sindata' });
         }
 
         if (!totalPago || Number(totalPago) <= 0) {
-            return res.status(400).json({ error: 'El monto a pagar debe ser mayor a 0' });
+            return res.status(400).json({ message: 'datoinvalido' });
         }
 
         const ACCESS_TOKEN = process.env.MP_ACCESS_TOKEN;
