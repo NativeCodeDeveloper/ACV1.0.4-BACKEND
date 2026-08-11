@@ -51,7 +51,7 @@ export const createOrder = async (req, res) => {
 
         const items = [{
             title: tituloProducto || 'Reserva consulta',
-            quantity: Number(cantidad),
+            quantity: 1,
             unit_price: Number(totalPago),
             currency_id: "CLP"
         }];
