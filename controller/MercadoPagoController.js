@@ -17,7 +17,7 @@ export const createOrder = async (req, res) => {
         const {
             tituloProducto,
             precio,
-            cantidad = 1,
+            cantidad,
             nombrePaciente,
             apellidoPaciente,
             rut,
@@ -94,9 +94,21 @@ export const createOrder = async (req, res) => {
             const reservaPacienteClass = new ReservaPacientes();
             const estadoPeticion = 0;
             const resultadoInsert = await reservaPacienteClass.insertarReservaPacienteBackend(
-                nombrePaciente, apellidoPaciente, rut, telefono, email,
-                fechaInicio, horaInicio, fechaFinalizacion, horaFinalizacion,
-                estadoReserva, preference_id,estadoPeticion,id_profesional
+                nombrePaciente,
+                apellidoPaciente,
+                rut,
+                telefono,
+                email,
+                fechaInicio,
+                horaInicio,
+                fechaFinalizacion,
+                horaFinalizacion,
+                totalPago,
+                tituloProducto,
+                estadoReserva,
+                preference_id,
+                estadoPeticion,
+                id_profesional
             );
 
             if (resultadoInsert && resultadoInsert.affectedRows > 0) {

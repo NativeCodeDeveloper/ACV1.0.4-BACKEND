@@ -423,7 +423,9 @@ export default class ReservaPacientes {
         horaInicio,
         fechaFinalizacion,
         horaFinalizacion,
+
         monto_reserva,
+
         motivo_reserva,
         estadoReserva,
         preference_id,
