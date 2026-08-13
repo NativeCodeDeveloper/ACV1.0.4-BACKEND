@@ -68,7 +68,7 @@ export const createOrder = async (req, res) => {
 
         const mercadoPagoPersistence = new MercadoPersistence();
         const tokenData = await mercadoPagoPersistence.seleccionarTOKEN();
-        const accessToken = tokenData.access_token;
+        const accessToken = tokenData?.[0]?.access_token;
 
         console.log("Iniciando Mercado pago: Body");
         console.log(req.body);
@@ -215,7 +215,7 @@ IMPORTANTE
 export const recibirPago = async (req, res) => {
     const mercadoPagoPersistence = new MercadoPersistence();
     const tokenData = await mercadoPagoPersistence.seleccionarTOKEN();
-    const ACCESS_TOKEN = tokenData.access_token;
+    const ACCESS_TOKEN = tokenData?.[0]?.access_token;
 
     if (!ACCESS_TOKEN) {
         return res.status(500).json({ error: 'No hay access token configurado en el servidor' });

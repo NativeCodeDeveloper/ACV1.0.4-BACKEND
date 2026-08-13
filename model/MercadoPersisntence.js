@@ -87,6 +87,8 @@ export default class MercadoPersistence {
 
             const query = `
             SELECT * FROM mercadoPago_persistence
+ORDER BY id_mercadoPago_persistence DESC
+LIMIT 1;
             `;
 
             return  await conexion.ejecutarQuery(query);
