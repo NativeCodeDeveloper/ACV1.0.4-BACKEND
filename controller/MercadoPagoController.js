@@ -340,6 +340,30 @@ export const recibirPago = async (req, res) => {
                         }
 
 
+
+                        try {
+
+                            console.log(`############################`);
+                            console.log(`Enviando correo de notificacion al equipo clinico`);
+                            console.log(`############################`);
+
+                           await NotificacionAgendamiento.enviarCorreoConfirmacionEquipo({
+                                nombreProfesional : reserva.nombreProfesional,
+                                nombrePaciente: reserva.nombrePaciente,
+                                apellidoPaciente: reserva.apellidoPaciente,
+                                fechaInicio: normalizarFechaISO(reserva.fechaInicio).toString(),
+                                horaInicio: normalizarHoraISO(reserva.horaInicio).toString(),
+                                monto_reserva: reserva.monto_reserva,
+                                motivo_reserva: reserva.motivo_reserva,
+                                accion: "AGENDADA",
+                                id_reserva: reserva.id_reserva
+                            })
+                        }catch{
+                            console.log(`Error al procesar envio de correo para el equipo clinico`);
+                            return res.status(500).json({ received: false });
+                        }
+
+
                     } else {
 
                         console.warn('No se encontro reserva para preference_id:', preference_id);
