@@ -1,0 +1,7 @@
+### Obtener cabecera de una plantilla por id
+POST http://localhost:3001/fichaPlantilla/obtenerPorId
+Content-Type: application/json
+
+{
+  "id_plantilla": 5
+}

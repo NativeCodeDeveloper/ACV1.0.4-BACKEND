@@ -2,8 +2,8 @@ import dotenv from 'dotenv';
 import ReservaPacientes from "../model/ReservaPacientes.js";
 import Pacientes from "../model/Pacientes.js";
 import NotificacionAgendamiento from "../services/notificacionAgendamiento.js";
-import { notificacionAgendamiento } from "../services/notificacionWhatsApp.js";
 import * as mpNamed from "mercadopago";
+import { notificacionAgendamiento, notificacionActualizacionAgendamiento } from "../services/notificacionWhatsApp.js";
 
 dotenv.config();
 
@@ -93,12 +93,16 @@ export const createOrder = async (req, res) => {
         try {
             const reservaPacienteClass = new ReservaPacientes();
             const estadoPeticion = 0;
+
+            const correoNormalizado = email.trim();
+            const numeroNormalizado = telefono.trim();
+
             const resultadoInsert = await reservaPacienteClass.insertarReservaPacienteBackend(
                 nombrePaciente,
                 apellidoPaciente,
                 rut,
-                telefono,
-                email,
+                numeroNormalizado,
+                correoNormalizado,
                 fechaInicio,
                 horaInicio,
                 fechaFinalizacion,
@@ -112,12 +116,15 @@ export const createOrder = async (req, res) => {
             );
 
             if (resultadoInsert && resultadoInsert.affectedRows > 0) {
-                console.log('Reserva insertada con estado "pendiente pago", preference_id:', preference_id);
+
+               //PRIMERA ACCION ENVIAR AL CLIENTE EL ENLACE DE PAGO GENERADO DESDE MERCADO PAGO
+                console.log('Reserva insertada con estado "reservado" con estado 0 (NO VISIBLE), preference_id:', preference_id);
                 return res.status(200).json({
                     id: resultBody.id,
                     init_point: resultBody.init_point,
                     sandbox_init_point: resultBody.sandbox_init_point,
                 });
+
             } else {
                 return res.status(500).json({ error: 'No se pudo insertar la reserva' });
             }
@@ -246,38 +253,11 @@ export const recibirPago = async (req, res) => {
                     const reserva = Array.isArray(dataCliente) && dataCliente.length > 0 ? dataCliente[0] : null;
 
                     if (reserva) {
-                        // --- INSERTAR PACIENTE ---
-                        try {
-                            const instanciaPacientes = new Pacientes();
-                            await instanciaPacientes.insertPacientemp(
-                                reserva.nombrePaciente,
-                                reserva.apellidoPaciente,
-                                reserva.rut,
-                                null,
-                                '---',
-                                0,
-                                reserva.telefono ?? 'NO INGRESADO',
-                                reserva.email ?? 'NO INGRESADO',
-                                '---',
-                                '---',
-                                null,
-                                null,
-                                null,
-                                null,
-                                null,
-                                null,
-                                null,
-                                null
-                            );
-                            console.log("Paciente insertado/verificado para:", reserva.rut);
-                        } catch (errPaciente) {
-                            console.error("Error insertando paciente:", errPaciente);
-                        }
-
-                        // --- ENVIAR CORREO DE AGENDAMIENTO AL PACIENTE ---
+                        //ENVIO DE CORREO AL EQUIPO DE LA CONSULTA
                         try {
                             await NotificacionAgendamiento.enviarCorreoConfirmacionReserva({
                                 to: reserva.email,
+                                id_profesional: reserva.id_profesional,
                                 nombrePaciente: reserva.nombrePaciente,
                                 apellidoPaciente: reserva.apellidoPaciente,
                                 rut: reserva.rut,
@@ -286,40 +266,22 @@ export const recibirPago = async (req, res) => {
                                 horaInicio: reserva.horaInicio,
                                 fechaFinalizacion: reserva.fechaFinalizacion,
                                 horaFinalizacion: reserva.horaFinalizacion,
-                                estadoReserva: 'reservada',
+                                monto_reserva: reserva.monto_reserva,
+                                motivo_reserva: reserva.motivo_reserva,
+                                estadoReserva: reserva.estadoReserva,
                                 id_reserva: reserva.id_reserva
                             });
-                            console.log('Correo de agendamiento enviado al paciente:', reserva.email);
-                        } catch (errMailPaciente) {
-                            console.error('Error enviando correo de agendamiento al paciente:', errMailPaciente);
+
+
+                        }catch {
+                            console.log(`Error al procesar reserva para preference_id: ${preference_id}`);
+                            return res.status(500).json({ received: false });
                         }
 
-                        // --- NOTIFICAR AL EQUIPO ---
-                        try {
-                            await NotificacionAgendamiento.enviarCorreoConfirmacionEquipo({
-                                nombrePaciente: reserva.nombrePaciente,
-                                apellidoPaciente: reserva.apellidoPaciente,
-                                fechaInicio: reserva.fechaInicio,
-                                horaInicio: reserva.horaInicio,
-                                accion: 'AGENDADA',
-                                id_reserva: reserva.id_reserva
-                            });
-                            console.log('Notificacion enviada al equipo para reserva:', reserva.id_reserva);
-                        } catch (errMailEquipo) {
-                            console.error('Error enviando notificacion al equipo:', errMailEquipo);
-                        }
 
-                        notificacionAgendamiento({
-                            telefono: reserva.telefono,
-                            nombre: reserva.nombrePaciente,
-                            apellido: reserva.apellidoPaciente,
-                            fecha: reserva.fechaInicio,
-                            hora: reserva.horaInicio,
-                            id_reserva: reserva.id_reserva
-                        }).catch((errWsp) => {
-                            console.error('Error enviando WhatsApp de agendamiento:', errWsp?.message || errWsp);
-                        });
+
                     } else {
+
                         console.warn('No se encontro reserva para preference_id:', preference_id);
                     }
 
