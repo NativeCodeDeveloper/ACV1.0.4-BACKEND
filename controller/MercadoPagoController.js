@@ -255,6 +255,11 @@ export const recibirPago = async (req, res) => {
                     if (reserva) {
                         //ENVIO DE CORREO AL EQUIPO DE LA CONSULTA
                         try {
+
+                            console.log(`############################`);
+                            console.log(`Enviando correo de confirmación para el email: ${reserva.email}`);
+                            console.log(`############################`);
+
                             await NotificacionAgendamiento.enviarCorreoConfirmacionReserva({
                                 to: reserva.email,
                                 id_profesional: reserva.id_profesional,
@@ -271,13 +276,35 @@ export const recibirPago = async (req, res) => {
                                 estadoReserva: reserva.estadoReserva,
                                 id_reserva: reserva.id_reserva
                             });
-
-
                         }catch {
-                            console.log(`Error al procesar reserva para preference_id: ${preference_id}`);
+                            console.log(`Error al procesar envio de correo para preference_id: ${preference_id}`);
                             return res.status(500).json({ received: false });
                         }
 
+
+
+
+                        try {
+
+                            console.log(`############################`);
+                            console.log(`Enviando correo de confirmación para el TELEFONO: ${reserva.telefono}`);
+                            console.log(`############################`);
+
+                            await notificacionAgendamiento({
+                                telefono: reserva.telefono,
+                                nombre: reserva.nombrePaciente,
+                                apellido: reserva.apellidoPaciente,
+                                nombreProfesional : reserva.nombreProfesional,
+                                motivo_reserva : reserva.motivo_reserva,
+                                fecha: reserva.fechaInicio,
+                                hora: reserva.horaInicio,
+                                id_reserva: reserva.id_reserva
+                            })
+
+                        }catch{
+                            console.log(`Error al procesar envio de whatsapp para ${reserva.telefono}`);
+                            return res.status(500).json({ received: false });
+                        }
 
 
                     } else {
