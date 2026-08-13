@@ -4,6 +4,7 @@ import Pacientes from "../model/Pacientes.js";
 import NotificacionAgendamiento from "../services/notificacionAgendamiento.js";
 import * as mpNamed from "mercadopago";
 import { notificacionAgendamiento, notificacionActualizacionAgendamiento } from "../services/notificacionWhatsApp.js";
+import MercadoPersistence from "../model/MercadoPersisntence.js"
 
 dotenv.config();
 
@@ -65,6 +66,10 @@ export const createOrder = async (req, res) => {
             id_profesional
         } = req.body;
 
+        const mercadoPagoPersistence = new MercadoPersistence();
+        const tokenData = await mercadoPagoPersistence.seleccionarTOKEN();
+        const accessToken = tokenData.access_token;
+
         console.log("Iniciando Mercado pago: Body");
         console.log(req.body);
 
@@ -76,7 +81,7 @@ export const createOrder = async (req, res) => {
             return res.status(400).json({ message: 'datoinvalido' });
         }
 
-        const ACCESS_TOKEN = process.env.MP_ACCESS_TOKEN;
+        const ACCESS_TOKEN = accessToken;
 
         if (!ACCESS_TOKEN) {
             return res.status(500).json({ error: 'No hay access token configurado en el servidor' });
@@ -208,7 +213,9 @@ IMPORTANTE
 
 
 export const recibirPago = async (req, res) => {
-    const ACCESS_TOKEN = process.env.MP_ACCESS_TOKEN;
+    const mercadoPagoPersistence = new MercadoPersistence();
+    const tokenData = await mercadoPagoPersistence.seleccionarTOKEN();
+    const ACCESS_TOKEN = tokenData.access_token;
 
     if (!ACCESS_TOKEN) {
         return res.status(500).json({ error: 'No hay access token configurado en el servidor' });
@@ -338,7 +345,6 @@ export const recibirPago = async (req, res) => {
                             console.log(`Error al procesar envio de whatsapp para ${reserva.telefono}`);
                             return res.status(500).json({ received: false });
                         }
-
 
 
                         try {

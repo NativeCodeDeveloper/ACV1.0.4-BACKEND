@@ -99,5 +99,24 @@ export default class MercadoPersistence {
 
 
 
+    async seleccionarTOKEN(){
+
+        try {
+            const conexion = DataBase.getInstance();
+
+            const query = `
+            SELECT mercadoPago_persistence.access_token FROM mercadoPago_persistence;
+            `;
+
+            return  await conexion.ejecutarQuery(query);
+
+        }catch(error){
+
+            throw error;
+        }
+    }
+
+
+
 
 }

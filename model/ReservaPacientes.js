@@ -206,7 +206,7 @@ export default class ReservaPacientes {
 
 
             const query = "UPDATE reservaPacientes SET nombrePaciente = ? , apellidoPaciente = ?, rut = ? , telefono = ? , email = ? , fechaInicio = ?  , horaInicio = ? , fechaFinalizacion = ? , horaFinalizacion = ? ,monto_reserva = ? , motivo_reserva = ?, estadoReserva = ? , id_profesional = ? , recordatorio12h = 0, recordatorio6h = 0, wspRecordatorio12h = 0, wspRecordatorio6h = 0, wspRecordatorio1h = 0 WHERE id_reserva = ?";
-            const params = [nombrePaciente, apellidoPaciente, rut, telefono, email, fechaInicio, horaInicio, fechaFinalizacion, horaFinalizacion,monto_reserva, motivo_reserva, estadoReserva, id_profesional, id_reserva];
+            const params = [nombrePaciente, apellidoPaciente, rut, telefono, email, fechaInicio, horaInicio, fechaFinalizacion, horaFinalizacion, monto_reserva, motivo_reserva, estadoReserva, id_profesional, id_reserva];
             const [resultadoQuery] = await connection.query(query, params);
             return resultadoQuery;
         } finally {
@@ -270,7 +270,7 @@ export default class ReservaPacientes {
 
 
     //METODO PARA INSERTAR NUEVAS CITAS MEDICAS
-    async insertarReservaPaciente(nombrePaciente, apellidoPaciente, rut, telefono, email, fechaInicio, horaInicio, fechaFinalizacion, horaFinalizacion,monto_reserva, motivo_reserva, estadoReserva, id_profesional) {
+    async insertarReservaPaciente(nombrePaciente, apellidoPaciente, rut, telefono, email, fechaInicio, horaInicio, fechaFinalizacion, horaFinalizacion, monto_reserva, motivo_reserva, estadoReserva, id_profesional) {
         const {connection, lockKey} = await this.obtenerConexionConBloqueoAgenda(id_profesional);
 
         try {
@@ -291,7 +291,7 @@ export default class ReservaPacientes {
             }
 
             const query = "INSERT INTO reservaPacientes(nombrePaciente, apellidoPaciente, rut, telefono, email, fechaInicio, horaInicio,fechaFinalizacion, horaFinalizacion,monto_reserva,motivo_reserva, estadoReserva, id_profesional) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)";
-            const params = [nombrePaciente, apellidoPaciente, rut, telefono, email, fechaInicio, horaInicio, fechaFinalizacion, horaFinalizacion,monto_reserva, motivo_reserva, estadoReserva, id_profesional];
+            const params = [nombrePaciente, apellidoPaciente, rut, telefono, email, fechaInicio, horaInicio, fechaFinalizacion, horaFinalizacion, monto_reserva, motivo_reserva, estadoReserva, id_profesional];
             const [resultadoQuery] = await connection.query(query, params);
             return resultadoQuery;
         } finally {
@@ -357,8 +357,6 @@ export default class ReservaPacientes {
     }
 
 
-
-
     async seleccionarPorId_profesional(id_profesional) {
         try {
             const conexion = DataBase.getInstance();
@@ -374,6 +372,8 @@ export default class ReservaPacientes {
             throw new Error(error);
         }
     }
+
+
 
     async seleccionarEntreFechas(fechaInicio, fechaFinalizacion) {
         try {
@@ -425,6 +425,7 @@ export default class ReservaPacientes {
         horaFinalizacion,
 
         monto_reserva,
+
 
         motivo_reserva,
         estadoReserva,
