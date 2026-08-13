@@ -481,6 +481,7 @@ reservaPacientes.motivo_reserva,
 reservaPacientes.estadoReserva,
 reservaPacientes.estadoPeticion,
 reservaPacientes.preference_id,
+reservaPacientes.id_reserva,
 
 profesionales.id_profesional,
 profesionales.nombreProfesional
