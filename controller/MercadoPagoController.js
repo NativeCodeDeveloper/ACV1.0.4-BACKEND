@@ -9,7 +9,40 @@ dotenv.config();
 
 const BACKEND = process.env.BACKEND_URL;
 
+function normalizarFechaISO(fecha) {
+    if (!fecha) return null;
 
+    const valor = String(fecha).trim();
+    if (!valor) return null;
+
+    // Caso común: "2026-08-13T04:00:00.000Z"
+    const match = valor.match(/^(\d{4}-\d{2}-\d{2})/);
+    if (match) return match[1];
+
+    // Fallback para otros formatos parseables
+    const d = new Date(valor);
+    if (Number.isNaN(d.getTime())) return null;
+
+    return d.toISOString().slice(0, 10);
+}
+
+
+function normalizarHoraISO(hora) {
+    if (!hora) return null;
+
+    const valor = String(hora).trim();
+    if (!valor) return null;
+
+    // Caso común: "14:30:00"
+    const match = valor.match(/^(\d{2}:\d{2})/);
+    if (match) return match[1];
+
+    // Fallback para otros formatos parseables
+    const d = new Date(`1970-01-01T${valor}`);
+    if (Number.isNaN(d.getTime())) return null;
+
+    return d.toISOString().slice(11, 16);
+}
 //SE DEFINE LA FUNCION CREATE ORDER ESTA FUNCION PERMITE CREAR LA ORDEN DE PAGO
 export const createOrder = async (req, res) => {
     try {
@@ -262,15 +295,15 @@ export const recibirPago = async (req, res) => {
 
                             await NotificacionAgendamiento.enviarCorreoConfirmacionReserva({
                                 to: reserva.email,
-                                id_profesional: reserva.id_profesional,
+                                id_profesional: reserva.nombreProfesional,
                                 nombrePaciente: reserva.nombrePaciente,
                                 apellidoPaciente: reserva.apellidoPaciente,
                                 rut: reserva.rut,
                                 telefono: reserva.telefono,
-                                fechaInicio: reserva.fechaInicio,
-                                horaInicio: reserva.horaInicio,
-                                fechaFinalizacion: reserva.fechaFinalizacion,
-                                horaFinalizacion: reserva.horaFinalizacion,
+                                fechaInicio: normalizarFechaISO(reserva.fechaInicio),
+                                horaInicio: normalizarHoraISO(reserva.horaInicio),
+                                fechaFinalizacion: normalizarFechaISO(reserva.fechaFinalizacion).toString(),
+                                horaFinalizacion: normalizarHoraISO(reserva.horaFinalizacion).toString(),
                                 monto_reserva: reserva.monto_reserva,
                                 motivo_reserva: reserva.motivo_reserva,
                                 estadoReserva: reserva.estadoReserva,
@@ -287,7 +320,7 @@ export const recibirPago = async (req, res) => {
                         try {
 
                             console.log(`############################`);
-                            console.log(`Enviando correo de confirmación para el TELEFONO: ${reserva.telefono}`);
+                            console.log(`Enviando wsp de confirmación para el TELEFONO: ${reserva.telefono}`);
                             console.log(`############################`);
 
                             await notificacionAgendamiento({
@@ -296,8 +329,8 @@ export const recibirPago = async (req, res) => {
                                 apellido: reserva.apellidoPaciente,
                                 nombreProfesional : reserva.nombreProfesional,
                                 motivo_reserva : reserva.motivo_reserva,
-                                fecha: reserva.fechaInicio,
-                                hora: reserva.horaInicio,
+                                fecha: normalizarFechaISO(reserva.fechaInicio).toString(),
+                                hora: normalizarHoraISO(reserva.horaInicio).toString(),
                                 id_reserva: reserva.id_reserva
                             })
 

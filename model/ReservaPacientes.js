@@ -465,7 +465,33 @@ export default class ReservaPacientes {
     async seleccionarFichasReservadasPreference(preference_id) {
         try {
             const conexion = DataBase.getInstance();
-            const query = "SELECT * FROM reservaPacientes WHERE preference_id = ? AND estadoPeticion <> 0"
+            const query = `
+            SELECT 
+reservaPacientes.nombrePaciente,
+reservaPacientes.apellidoPaciente,
+reservaPacientes.rut,
+reservaPacientes.telefono,
+reservaPacientes.email,
+reservaPacientes.fechaInicio,
+reservaPacientes.horaInicio,
+reservaPacientes.fechaFinalizacion,
+reservaPacientes.horaFinalizacion,
+reservaPacientes.monto_reserva,
+reservaPacientes.motivo_reserva,
+reservaPacientes.estadoReserva,
+reservaPacientes.estadoPeticion,
+reservaPacientes.preference_id,
+
+profesionales.id_profesional,
+profesionales.nombreProfesional
+
+FROM reservaPacientes
+
+INNER JOIN profesionales
+ON profesionales.id_profesional = reservaPacientes.id_profesional
+
+WHERE reservaPacientes.estadoPeticion <> 0 AND
+reservaPacientes.preference_id = ?`;
             const param = [preference_id];
             const resultadoQuery = await conexion.ejecutarQuery(query, param);
 
