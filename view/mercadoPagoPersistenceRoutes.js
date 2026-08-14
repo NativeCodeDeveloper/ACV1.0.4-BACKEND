@@ -6,6 +6,7 @@ router.post("/insertarPersistencia", mercadoPagoPersistenceController.insertarPe
 router.post("/actualizarEstado", mercadoPagoPersistenceController.actualizarEstado);
 router.post("/actualizar", mercadoPagoPersistenceController.actualizarPersistencia);
 router.get("/obtenerPersistencia", mercadoPagoPersistenceController.seleccionarMercadoPagoPersistence);
+router.get("/obtenerTOKEN", mercadoPagoPersistenceController.seleccionarTOKEN);
 
 
 export default router;

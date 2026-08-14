@@ -5,6 +5,9 @@
 ### Seleccionar todas las configuraciones de persistencia
 GET http://localhost:3010/persistence/obtenerPersistencia
 
+### Seleccionar tokens de persistencia
+GET http://localhost:3010/persistence/obtenerTOKEN
+
 
 ### Insertar una configuración de persistencia
 POST http://localhost:3010/persistence/insertarPersistencia

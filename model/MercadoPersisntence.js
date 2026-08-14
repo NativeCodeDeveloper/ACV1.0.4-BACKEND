@@ -29,17 +29,23 @@ export default class MercadoPersistence {
 
 
 
-    async actualizarPersistencia(nombre_cliente,access_token,id_mercadoPago_persistence ){
+    async actualizarPersistencia(
+        nombre_cliente,
+        access_token,
+        estado_pasarela,
+        id_mercadoPago_persistence
+    ){
         try {
             const conexion = DataBase.getInstance();
             const query = `
             UPDATE mercadoPago_persistence
-            SET nombre_cliente = ?, access_token = ?
+            SET nombre_cliente = ?, access_token = ?, estado_pasarela = ?
             WHERE id_mercadoPago_persistence = ?
             `;
             const param = [
                 nombre_cliente,
                 access_token,
+                estado_pasarela,
                 id_mercadoPago_persistence
             ];
             return  await conexion.ejecutarQuery(query, param);

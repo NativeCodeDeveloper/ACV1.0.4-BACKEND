@@ -47,8 +47,12 @@ export default class MercadoPagoPersistenceController {
             const {
                 nombre_cliente,
                 access_token,
+                estado_pasarela,
                 id_mercadoPago_persistence
             }=req.body;
+
+            console.log(`Datos llegados para el cambio de datos para mercado pago:`);
+            console.log(req.body);
 
             if(!nombre_cliente || !access_token || !id_mercadoPago_persistence){
                 return res.status(400).send({
@@ -57,7 +61,7 @@ export default class MercadoPagoPersistenceController {
             }
 
             const mercadoPagoPersistence = new MercadoPersistence();
-            const respuestaModel = await mercadoPagoPersistence.actualizarPersistencia(nombre_cliente, access_token, id_mercadoPago_persistence);
+            const respuestaModel = await mercadoPagoPersistence.actualizarPersistencia(nombre_cliente, access_token, estado_pasarela, id_mercadoPago_persistence);
 
             if(respuestaModel.affectedRows > 0){
                 return res.status(200).send({
@@ -121,12 +125,7 @@ export default class MercadoPagoPersistenceController {
             const respuestaModel = await mercadoPagoPersistence.seleccionarMercadoPagoPersistence();
 
             if(Array.isArray(respuestaModel) && respuestaModel.length > 0){
-
-                let primeraRespuesta = respuestaModel[0];
-
-                return res.status(200).send({
-                  primeraRespuesta
-                });
+                res.status(200).json(respuestaModel);
 
             }else {
                 return res.status(200).send({
@@ -135,6 +134,27 @@ export default class MercadoPagoPersistenceController {
             }
 
         }catch (e) {
+            return res.status(500).send({
+                message: `serverError : ${e}`
+            })
+        }
+    }
+
+    static async seleccionarTOKEN(req,res){
+        try {
+            const mercadoPagoPersistence = new MercadoPersistence();
+            const respuestaModel = await mercadoPagoPersistence.seleccionarTOKEN();
+
+            if(Array.isArray(respuestaModel) && respuestaModel.length > 0){
+                return res.status(200).send({
+                    respuestaModel
+                });
+            }else {
+                return res.status(200).send({
+                    message: false
+                });
+            }
+        } catch (e) {
             return res.status(500).send({
                 message: `serverError : ${e}`
             })
