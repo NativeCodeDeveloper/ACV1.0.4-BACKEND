@@ -94,11 +94,22 @@ export const createOrder = async (req, res) => {
             currency_id: "CLP"
         }];
 
+        const params = new URLSearchParams({
+            fecha:      fechaInicio,
+            hora:       horaInicio,
+            horaFin:    horaFinalizacion,
+            profesional: id_profesional,
+            servicio:   tituloProducto || "",
+            duracion:   `${horaInicio} - ${horaFinalizacion}`,
+            precio:     String(totalPago),
+        });
+
+        const FRONTEND = process.env.FRONT_URL;
         // Preparar el objeto 'preference' usando los items y metadata
         const preference = {
             items,
             back_urls: {
-                success: `${BACKEND}/pagosMercadoPago/success`,
+                success: `${FRONTEND}/reserva-hora/params?${params.toString()}`,
                 failure: `${BACKEND}/pagosMercadoPago/failure`,
                 pending: `${BACKEND}/pagosMercadoPago/pending`,
             },
