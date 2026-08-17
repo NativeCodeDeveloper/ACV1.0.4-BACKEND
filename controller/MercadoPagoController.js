@@ -109,7 +109,7 @@ export const createOrder = async (req, res) => {
         const preference = {
             items,
             back_urls: {
-                success: `${FRONTEND}/reserva-hora/params?${params.toString()}`,
+                success: `${FRONTEND}/reserva-hora?${params.toString()}`,
                 failure: `${BACKEND}/pagosMercadoPago/failure`,
                 pending: `${BACKEND}/pagosMercadoPago/pending`,
             },
