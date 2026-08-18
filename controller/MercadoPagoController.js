@@ -5,6 +5,7 @@ import NotificacionAgendamiento from "../services/notificacionAgendamiento.js";
 import * as mpNamed from "mercadopago";
 import { notificacionAgendamiento, notificacionActualizacionAgendamiento } from "../services/notificacionWhatsApp.js";
 import MercadoPersistence from "../model/MercadoPersisntence.js"
+import Profesionales from "../model/Profesionales.js";
 
 dotenv.config();
 
@@ -94,11 +95,18 @@ export const createOrder = async (req, res) => {
             currency_id: "CLP"
         }];
 
+
+        const profesionales = new Profesionales();
+        const profesionalesSeleccionId = await profesionales.seleccionarProfesionalPorID(id_profesional);
+        const profesionalSeleccionado = profesionalesSeleccionId?.[0]?.nombreProfesional || `PROFESIONAL NO IDENTIFICADO`;
+
+
+
         const params = new URLSearchParams({
             fecha:      fechaInicio,
             hora:       horaInicio,
             horaFin:    horaFinalizacion,
-            profesional: id_profesional,
+            profesional: profesionalSeleccionado,
             servicio:   tituloProducto || "",
             duracion:   `${horaInicio} - ${horaFinalizacion}`,
             precio:     String(totalPago),
