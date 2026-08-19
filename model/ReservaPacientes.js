@@ -424,17 +424,13 @@ export default class ReservaPacientes {
         horaInicio,
         fechaFinalizacion,
         horaFinalizacion,
-
         monto_reserva,
-
-
         motivo_reserva,
         estadoReserva,
         preference_id,
         estadoPeticion,
         id_profesional) {
         const {connection, lockKey} = await this.obtenerConexionConBloqueoAgenda(id_profesional);
-
         try {
             const disponible = await this.validarDisponibilidadEnConexion(
                 connection,
@@ -452,8 +448,10 @@ export default class ReservaPacientes {
                 );
             }
 
-            const query = `INSERT INTO reservaPacientes(nombrePaciente, apellidoPaciente, rut, telefono, email, fechaInicio, horaInicio,fechaFinalizacion, horaFinalizacion, monto_reserva, motivo_reserva, estadoReserva, preference_id, estadoPeticion,id_profesional) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`;
-            const params = [nombrePaciente, apellidoPaciente, rut, telefono, email, fechaInicio, horaInicio, fechaFinalizacion, horaFinalizacion,monto_reserva, motivo_reserva, estadoReserva, preference_id, estadoPeticion, id_profesional];
+            const fechaActualMas10Minutos = new Date(Date.now() + 10 * 60 * 1000);
+
+            const query = `INSERT INTO reservaPacientes(nombrePaciente, apellidoPaciente, rut, telefono, email, fechaInicio, horaInicio,fechaFinalizacion, horaFinalizacion, monto_reserva, motivo_reserva, estadoReserva, preference_id, estadoPeticion,id_profesional, fechaExpiracionPago) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`;
+            const params = [nombrePaciente, apellidoPaciente, rut, telefono, email, fechaInicio, horaInicio, fechaFinalizacion, horaFinalizacion,monto_reserva, motivo_reserva, estadoReserva, preference_id, estadoPeticion, id_profesional, fechaActualMas10Minutos];
             const [resultadoQuery] = await connection.query(query, params);
             return resultadoQuery;
         } finally {
