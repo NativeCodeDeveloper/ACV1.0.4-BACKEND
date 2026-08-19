@@ -149,7 +149,7 @@ export const createOrder = async (req, res) => {
         // --- INSERTAR RESERVA CON ESTADO "pendiente pago" ---
         try {
             const reservaPacienteClass = new ReservaPacientes();
-            const estadoPeticion = 0;
+            const estadoPeticion = 3;
 
             const correoNormalizado = email.trim();
             const numeroNormalizado = telefono.trim();
@@ -175,7 +175,7 @@ export const createOrder = async (req, res) => {
             if (resultadoInsert && resultadoInsert.affectedRows > 0) {
 
                //PRIMERA ACCION ENVIAR AL CLIENTE EL ENLACE DE PAGO GENERADO DESDE MERCADO PAGO
-                console.log('Reserva insertada con estado "reservado" con estado 0 (NO VISIBLE), preference_id:', preference_id);
+                console.log('Reserva insertada con estado "reservado" con estado 3 (VISIBLE TEMPORALMENTE), preference_id:', preference_id);
                 return res.status(200).json({
                     id: resultBody.id,
                     init_point: resultBody.init_point,
