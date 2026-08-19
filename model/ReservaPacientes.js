@@ -5,8 +5,6 @@ const CODIGO_CONFLICTO_AGENDA = "CONFLICTO_AGENDA";
 const CODIGO_BLOQUEO_TIMEOUT = "BLOQUEO_AGENDA_TIMEOUT";
 
 export default class ReservaPacientes {
-    constructor() {
-    }
 
     constructor(
         id_reserva,
