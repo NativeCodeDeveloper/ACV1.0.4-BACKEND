@@ -160,7 +160,7 @@ app.listen(PORT, () => {
         } catch (e) {
             console.error("[CRON] Error en cron job de expiración de reservas pendientes:", e);
         }
-    }, 120000);
+    }, 60000);
 
     // Ejecutar una vez al iniciar el servidor
     setTimeout(async () => {

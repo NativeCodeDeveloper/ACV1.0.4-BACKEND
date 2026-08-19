@@ -558,7 +558,10 @@ reservaPacientes.preference_id = ?`;
     async cambiarReservaPagadaVisible(preference_id) {
         try {
             const conexion = DataBase.getInstance();
-            const query = "UPDATE reservaPacientes SET estadoPeticion = 1  WHERE preference_id = ?";
+            const query = `  UPDATE reservaPacientes
+  SET estadoPeticion = 1
+  WHERE preference_id = ?
+    AND estadoPeticion = 3`;
             const params = [preference_id];
             const resultado = await conexion.ejecutarQuery(query, params);
             if (resultado) {
