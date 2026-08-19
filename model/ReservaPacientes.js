@@ -98,6 +98,7 @@ export default class ReservaPacientes {
       SELECT id_reserva AS id
       FROM reservaPacientes
       WHERE id_profesional = ?
+      AND estadoPeticion IN (1, 3)
       AND estadoReserva <> 'cancelada'
       AND (? IS NULL OR id_reserva <> ?)
       AND NOT (
