@@ -5,6 +5,9 @@ const CODIGO_CONFLICTO_AGENDA = "CONFLICTO_AGENDA";
 const CODIGO_BLOQUEO_TIMEOUT = "BLOQUEO_AGENDA_TIMEOUT";
 
 export default class ReservaPacientes {
+    constructor() {
+    }
+
     constructor(
         id_reserva,
         nombrePaciente,
@@ -412,6 +415,23 @@ export default class ReservaPacientes {
         }
     }
 
+
+    async expirarReservasPendientes(){
+        try {
+            const conexion = DataBase.getInstance();
+
+            const query = `
+             update reservaPacientes SET estadoPeticion = 0 WHERE fechaExpiracionPago <= NOW() AND estadoPeticion = 3 
+            `;
+
+            return  await conexion.ejecutarQuery(query);
+
+
+        }catch (e) {
+            throw new Error(e);
+        }
+
+    }
 
     //METODO PARA INSERTAR NUEVAS CITAS MEDICAS DESDE METODOS INTERNOS DEL BACKEND COMO MERCADO PAGO
     async insertarReservaPacienteBackend(

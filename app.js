@@ -37,7 +37,8 @@ import examenesRoutes from "./view/examenesClinicosRoutes.js";
 import recetasPacientesRoutes from "./view/recetasPacientesRoutes.js";
 import datosEmpresaRoutes from "./view/datosEmpresaRoutes.js";
 import archivoPacienteRoutes from "./view/archivoPacienteRoutes.js";
-import persistence from "./view/mercadoPagoPersistenceRoutes.js"
+import persistence from "./view/mercadoPagoPersistenceRoutes.js";
+import ReservaPacientes from "./model/ReservaPacientes.js";
 
 
 
@@ -147,6 +148,19 @@ app.listen(PORT, () => {
     setInterval(async () => {
         await ejecutarRecordatoriosAutomaticos();
     }, 5 * 60 * 1000); // 5 minutos en milisegundos
+
+    const reservaPacientesClass = new ReservaPacientes();
+
+
+
+    console.log("[CRON] Iniciando cron job de expiración de reservas pendientes (cada 2 minutos)...");
+    setInterval(async () => {
+        try {
+            await reservaPacientesClass.expirarReservasPendientes();
+        } catch (e) {
+            console.error("[CRON] Error en cron job de expiración de reservas pendientes:", e);
+        }
+    }, 120000);
 
     // Ejecutar una vez al iniciar el servidor
     setTimeout(async () => {
