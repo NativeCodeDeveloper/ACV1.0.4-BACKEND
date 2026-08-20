@@ -118,8 +118,8 @@ export const createOrder = async (req, res) => {
             items,
             back_urls: {
                 success: `${FRONTEND}/reserva-hora?${params.toString()}`,
-                failure: `${BACKEND}/pagosMercadoPago/failure`,
-                pending: `${BACKEND}/pagosMercadoPago/pending`,
+                failure: `${FRONTEND}/pagoRechazado`,
+                pending: `${FRONTEND}/pagoEnProceso`,
             },
             metadata: {
                 nombre_comprador: nombrePaciente,
